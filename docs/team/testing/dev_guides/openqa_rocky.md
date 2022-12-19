@@ -78,6 +78,7 @@ sudo systemctl enable openqa-scheduler --now
 sudo systemctl enable openqa-websockets --now
 sudo systemctl enable openqa-webui --now
 sudo systemctl enable fm-consumer@fedora_openqa_scheduler --now
+sudo systemctl enable libvirtd --now
 sudo setsebool -P httpd_can_network_connect 1
 sudo firewall-cmd --add-service=http --permanent
 sudo firewall-cmd --reload
