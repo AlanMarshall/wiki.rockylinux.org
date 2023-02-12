@@ -1,7 +1,7 @@
 ---
 title: OpenQA for rocky
 author: Alan Marshall
-revision_date: 2022-12-13
+revision_date: 2023-02-12
 rc:
   prod: Rocky Linux
   vers:
@@ -42,7 +42,7 @@ Some pages use queries to select what should be shown. The query parameters are 
 OpenQA can be installed only on a Fedora (or OpenSUSE) server or workstation.
 
 ```
-# Install Packages
+# install Packages
 # for openqa
 sudo dnf install openqa openqa-httpd openqa-worker fedora-messaging python3-jsonschema
 sudo dnf install perl-REST-Client.noarch
@@ -51,14 +51,14 @@ sudo dnf install perl-REST-Client.noarch
 sudo dnf install libguestfs-tools libguestfs-xfs python3-fedfind python3-libguestfs
 sudo dnf install libvirt-daemon-config-network libvirt-python3 virt-install withlock
 
-# Configure httpd:
+# configure httpd:
 cd /etc/httpd/conf.d/
 sudo cp openqa.conf.template openqa.conf
 sudo cp openqa-ssl.conf.template openqa-ssl.conf
 sudo setsebool -P httpd_can_network_connect 1
 sudo systemctl restart httpd
 
-# Configure the web UI
+# configure the web UI
 sudo vi /etc/openqa/openqa.ini
 
 [global]
@@ -88,7 +88,7 @@ sudo systemctl restart httpd
 #   or on remote system   http://<ip addr>
 # Click Login, then Manage API Keys, create a key and secret.
 
-# Insert key and secret
+# insert key and secret
 sudo vi /etc/openqa/client.conf
 
 [localhost]
@@ -100,7 +100,7 @@ sudo systemctl enable openqa-worker@1 --now
 # then ...@2 ...etc as desired. Look in webui workers to check shown idle.
 # as a rule of thumb, you can have about half the number of workers as cores
 
-# Get Rocky tests
+# get Rocky tests
 cd /var/lib/openqa/tests/
 sudo git clone https://github.com/rocky-linux/os-autoinst-distri-rocky.git rocky
 sudo chown -R geekotest:geekotest rocky
@@ -137,11 +137,142 @@ cd /var/lib/openqa/tests/rocky/
 openqa-cli api -X POST isos ISO=Rocky-9.1-x86_64-minimal.iso ARCH=x86_64 DISTRI=rocky FLAVOR=minimal-iso VERSION=9.1 BUILD="$(date +%Y%m%d.%H%M%S).0"-minimal
 openqa-cli api -X POST isos ISO=Rocky-9.1-x86_64-boot.iso ARCH=x86_64 DISTRI=rocky FLAVOR=boot-iso VERSION=9.1 BUILD="$(date +%Y%m%d.%H%M%S).0"-boot
 
-# ...to be continued, watch this space.
+```
+At this point your system is configured for single vm deployment and it can be used as such. Pause here if you wish to get some practice using openqa before progressing further.
+The next part describes installation and configuration of facilities for multi-vm testing which is substantially more complicated.
+
+The following is a modified version of:
+https://fedoraproject.org/wiki/OpenQA_advanced_network_guide
+and the upstream documentation:
+https://github.com/os-autoinst/openQA/blob/master/docs/Networking.asciidoc
+
+If you want to run the openQA tests that rely on advanced networking, you must configure it. See the upstream documentation. The following procedure will configure the network using openvswitch to meet openQA's expectations: there must be a bridge with IP 192.16.2.2 (the upstream defaults are 172.16.2.2 for Fedora and 10.0.2.2 for SUSE, but Rocky's tests are written to expect 192.16.2.2) and several tapN devices attached to the bridge, as many as there are worker instances on each worker host, which the qemu processes can attach to using -netdev tap. The worker instances must be able to communicate with each other and with the worker host web server which listens on the bridge interface (and has a random port number within a specified range). The traffic from the workers must be masqueraded to the external network.
+
+os-autoinst has a helper service, os-autoinst-openvswitch, which isolates groups of workers on their own VLANs, so you don't have to worry about address collisions if you have more than one set of parallel jobs running at once (e.g. if you have a set of jobs which uses hardcoded static IPs, and it happens to run for two arches or images at once). The workers for each set of parallel jobs are assigned a different VLAN.
 
 ```
+# install packages
+dnf install os-autoinst-openvswitch
+dnf install tunctl
+dnf install iptables-services
+dnf install network-scripts
+
+# create the bridge config file, /etc/sysconfig/network-scripts/ifcfg-br0,
+# with these contents
+DEVICETYPE='ovs'
+TYPE='OVSBridge'
+BOOTPROTO='static'
+IPADDR='192.16.2.2'
+NETMASK='255.254.0.0'
+DEVICE=br0
+STP=off
+ONBOOT='yes'
+NAME='br0'
+HOTPLUG='no'
+# if you already have a br0, refer to upstream (Fedora)
+
+# create file /etc/sysconfig/os-autoinst-openvswitch, with these contents
+OS_AUTOINST_BRIDGE_LOCAL_IP=192.16.2.2
+OS_AUTOINST_BRIDGE_REWRITE_TARGET=192.17.0.0
+
+# create /etc/sysconfig/network-scripts/ifcfg-tap0, with these contents
+DEVICETYPE='ovs'
+TYPE='OVSPort'
+OVS_BRIDGE='br0'
+DEVICE='tap0'
+ONBOOT='yes'
+BOOTPROTO='none'
+HOTPLUG='no'
+
+# Create as many ifcfg-tapN files as you have workers, with the DEVICE
+# changed appropriately - ifcfg-tap1, ifcfg-tap2 and so on.
+# Note you cannot name the tap devices in any other way, and by default,
+# openQA workers pick the tap device based on their number - worker1 uses tap0,
+# and so on. Tests can override this and specify a particular tap device,
+# but when a test does not do this, the behaviour is not configurable.
+
+# create /sbin/ifup-pre-local with these contents
+#!/bin/sh
+
+# if the interface being brought up is tap[n], create
+# the tap device first
+if=$(echo "$1" | sed -e 's,ifcfg-,,')
+tap=$(echo "$if" | sed -e 's,[0-9]\+$,,')
+if [ "$tap" == "tap" ]; then
+    tunctl -u _openqa-worker -p -t "$if"
+fi
+# this will create the underlying device for the tap connections when they are
+# brought up
+
+# ensure the file is executable by root
+chmod ug+x /sbin/ifup-pre-local
+
+# adjust the firewall configuration
+
+# for iptables, /etc/sysconfig/iptables should look like something like this,
+# with enp2s0 changed to the name of whatever adapter you have connected to the
+# outside world
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# allow ping and traceroute
+-A INPUT -p icmp -j ACCEPT
+
+# localhost is fine
+-A INPUT -i lo -j ACCEPT
+
+# Established connections allowed
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# allow ssh - always
+-A INPUT -m conntrack --ctstate NEW -m tcp -p tcp --dport 22 -j ACCEPT
+
+# allow HTTP / HTTPS
+-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+
+# allow port forwarding
+-A FORWARD -i br0 -j ACCEPT
+-A FORWARD -m state -i enp2s0 -o br0 --state RELATED,ESTABLISHED -j ACCEPT
+
+# allow all traffic from br0
+-A INPUT -i br0 -j ACCEPT
+
+# otherwise kick everything out
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+
+*nat
+# setup masquerade
+-A POSTROUTING -o enp2s0 -j MASQUERADE
+COMMIT
+
+# disable firewalld, if you will use iptables
+systemctl disable firewalld.service
+systemctl stop firewalld.service
+
+# enable forwarding in sysctl
+sysctl -w net.ipv4.ip_forward=1
+
+# to make this permanent, edit /etc/sysctl.conf and add this line
+net.ipv4.ip_forward = 1
+
+# enable all the networking-related services
+systemctl enable openvswitch.service network.service iptables.service os-autoinst-openvswitch.service
+systemctl restart openvswitch.service network.service iptables.service os-autoinst-openvswitch.service
+
+```
+
 ### Helper Scripts
 
+see:
+https://github.com/rocky-linux/os-autoinst-distri-rocky/tree/develop/scripts
+
+cancel-build.sh is especially useful when you discover that you have initiated a large build and got it wrong... d'oh.
 
 ### Using Templates
 
