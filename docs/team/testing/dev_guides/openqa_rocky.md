@@ -1,7 +1,7 @@
 ---
 title: OpenQA for rocky
 author: Alan Marshall
-revision_date: 2023-02-12
+revision_date: 2023-02-25
 rc:
   prod: Rocky Linux
   vers:
@@ -146,11 +146,13 @@ https://fedoraproject.org/wiki/OpenQA_advanced_network_guide
 and the upstream documentation:
 https://github.com/os-autoinst/openQA/blob/master/docs/Networking.asciidoc
 
-If you want to run the openQA tests that rely on advanced networking, you must configure it. See the upstream documentation. The following procedure will configure the network using openvswitch to meet openQA's expectations: there must be a bridge with IP 192.16.2.2 (the upstream defaults are 172.16.2.2 for Fedora and 10.0.2.2 for SUSE, but Rocky's tests are written to expect 192.16.2.2) and several tapN devices attached to the bridge, as many as there are worker instances on each worker host, which the qemu processes can attach to using -netdev tap. The worker instances must be able to communicate with each other and with the worker host web server which listens on the bridge interface (and has a random port number within a specified range). The traffic from the workers must be masqueraded to the external network.
+If you want to run the openQA tests that rely on advanced networking, you must configure for it. The following procedure will configure the network using openvswitch to meet openQA's expectations: there must be a bridge with IP 172.16.2.2 (the upstream defaults are 172.16.2.2 for Fedora and 10.0.2.2 for SUSE) and several tapN devices attached to the bridge, as many as there are worker instances on each worker host, which the qemu processes can attach to using -netdev tap. The worker instances must be able to communicate with each other and with the worker host web server which listens on the bridge interface (and has a random port number within a specified range). The traffic from the workers must be masqueraded to the external network.
 
 os-autoinst has a helper service, os-autoinst-openvswitch, which isolates groups of workers on their own VLANs, so you don't have to worry about address collisions if you have more than one set of parallel jobs running at once (e.g. if you have a set of jobs which uses hardcoded static IPs, and it happens to run for two arches or images at once). The workers for each set of parallel jobs are assigned a different VLAN.
 
 ```
+This code section is EXPERIMENTAL   do not use on a production system
+
 # install packages
 dnf install os-autoinst-openvswitch
 dnf install tunctl
@@ -162,7 +164,7 @@ dnf install network-scripts
 DEVICETYPE='ovs'
 TYPE='OVSBridge'
 BOOTPROTO='static'
-IPADDR='192.16.2.2'
+IPADDR='172.16.2.2'
 NETMASK='255.254.0.0'
 DEVICE=br0
 STP=off
@@ -172,8 +174,8 @@ HOTPLUG='no'
 # if you already have a br0, refer to upstream (Fedora)
 
 # create file /etc/sysconfig/os-autoinst-openvswitch, with these contents
-OS_AUTOINST_BRIDGE_LOCAL_IP=192.16.2.2
-OS_AUTOINST_BRIDGE_REWRITE_TARGET=192.17.0.0
+OS_AUTOINST_BRIDGE_LOCAL_IP=172.16.2.2
+OS_AUTOINST_BRIDGE_REWRITE_TARGET=172.17.0.0
 
 # create /etc/sysconfig/network-scripts/ifcfg-tap0, with these contents
 DEVICETYPE='ovs'
@@ -185,15 +187,15 @@ BOOTPROTO='none'
 HOTPLUG='no'
 
 # Create as many ifcfg-tapN files as you have workers, with the DEVICE
-# changed appropriately - ifcfg-tap1, ifcfg-tap2 and so on.
+# changed appropriately - ifcfg-tap0, ifcfg-tap1 and so on.
 # Note you cannot name the tap devices in any other way, and by default,
 # openQA workers pick the tap device based on their number - worker1 uses tap0,
 # and so on. Tests can override this and specify a particular tap device,
 # but when a test does not do this, the behaviour is not configurable.
 
 # create /sbin/ifup-pre-local with these contents
-#!/bin/sh
 
+#!/bin/sh
 # if the interface being brought up is tap[n], create
 # the tap device first
 if=$(echo "$1" | sed -e 's,ifcfg-,,')
@@ -207,11 +209,10 @@ fi
 # ensure the file is executable by root
 chmod ug+x /sbin/ifup-pre-local
 
-# adjust the firewall configuration
-
 # for iptables, /etc/sysconfig/iptables should look like something like this,
 # with enp2s0 changed to the name of whatever adapter you have connected to the
 # outside world
+--------------------
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
@@ -236,7 +237,7 @@ chmod ug+x /sbin/ifup-pre-local
 
 # allow port forwarding
 -A FORWARD -i br0 -j ACCEPT
--A FORWARD -m state -i enp2s0 -o br0 --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -m state -i eno1 -o br0 --state RELATED,ESTABLISHED -j ACCEPT
 
 # allow all traffic from br0
 -A INPUT -i br0 -j ACCEPT
@@ -248,10 +249,12 @@ COMMIT
 
 *nat
 # setup masquerade
--A POSTROUTING -o enp2s0 -j MASQUERADE
+-A POSTROUTING -o eno1 -j MASQUERADE
 COMMIT
+--------------------
 
-# disable firewalld, if you will use iptables
+# "adjust" the firewall configuration
+# disable firewalld, if you will be using iptables
 systemctl disable firewalld.service
 systemctl stop firewalld.service
 
