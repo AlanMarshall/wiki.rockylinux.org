@@ -13,7 +13,7 @@ Below is a table of Rocky Linux versions, with accompanying general release and 
 | Rocky Linux 8  | June 21, 2021 | May 31, 2029         |
 | Rocky Linux 9  | July 14, 2022 | May 31, 2032         |
 
-This however does not tell the full story. See timeline and version policy below.
+This is a general idea of the release date to end of life date. See the timeline and version policy below for a more in-depth look and big picture information.
 
 ## Timeline
 
@@ -32,9 +32,19 @@ The question often becomes, how often are releases? Based on the cadence set out
 
 Below is a general guideline (which will likely have mistakes) for the "full support" cycle for an Enterprise Linux distribution.
 
-| Info          | .0   | .1       | .2   | .3       | .4  | .5       | .6  | .7       | .8  | .9       | .10 |
-|---------------|------|----------|------|----------|-----|----------|-----|----------|-----|----------|-----|
-| Release Month | May  | November | May  | November | May | November | May | November | May | November | May |
+| Version | Month    |
+|---------|----------|
+| .0      | May      |
+| .1      | November |
+| .2      | May      |
+| .3      | November |
+| .4      | May      |
+| .5      | November |
+| .6      | May      |
+| .7      | November |
+| .8      | May      |
+| .9      | November |
+| .10     | May      |
 
 After `X.10` is released, the following may be true:
 
@@ -46,9 +56,11 @@ After `X.10` is released, the following may be true:
 
 Rocky Linux attempts to follow the same pattern as Red Hat Enterprise Linux. As such, releases aim to be as on time as possible as they are released upstream.
 
-For Rocky Linux 8, previous versions of packages will coexist in the repositories to allow a user to downgrade in case of a regression or other use cases (such as security only updates). However, when a new minor release arrives, all previous updates/versions are *not* carried over.
+For Rocky Linux 8, previous versions of packages will coexist in the repositories to allow a user to downgrade in case of a regression or other use cases (such as security only updates).
 
 Rocky Linux 9 does not currently support this policy and can be expected in a future Rocky Linux 9 version. Please see [Peridot Issue #18](https://github.com/rocky-linux/peridot/issues/18).
+
+For all Rocky Linux versions: When a new minor release arrives, all previous updates/versions are *not* carried over.
 
 ### General Update Timeline
 

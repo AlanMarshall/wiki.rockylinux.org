@@ -61,7 +61,7 @@ There are cases where it may do more harm than good to deny or to not provide as
 
 * **If the question is related to drivers from elrepo**
 
-    * It is common for users to be using hardware that is either not supported in a current Rocky release or needs a better driver (eg nouveau -> nvidia). Providing general assistance for getting such drivers should be considered semi-topical. Most users will support one another in this scenario. elrepo volunteers will be in the channel as well assist users. Other issues should go to `#elrepo` or where topical, such as their [Bug Tracker](https://elrepo.org/bugs).
+    * It is common for users to be using hardware that is either not supported in a current Rocky release or needs a better driver (e.g., nouveau -> nvidia). Providing general assistance for getting such drivers should be considered semi-topical. Most users will support one another in this scenario. elrepo volunteers will be in the channel as well assist users. Other issues should go to `#elrepo` or where topical, such as their [Bug Tracker](https://elrepo.org/bugs).
 
 ### What is not supported?
 
@@ -150,6 +150,12 @@ If you are a user of Matrix, most of the above still applies to you. You may nee
 
 The Rocky Linux matrix space can be joined [here](https://matrix.to/#/!rHvPOeKWNBOYSKTiBr:matrix.org?via=matrix.org).
 
+### IRC Cloaks for libera.chat network
+
+Cloaks allow you to show your association with the Rocky Linux project and protect your hostname from being seen from others. Cloaks can be received from a project or just by the network upon request.
+
+If you would like to receive a cloak, contact Neil or Louis on IRC or Mattermost.
+
 ## Context
 
 This section provides context to some things mentioned throughout this document that would've likely crowded the section entirely. These sections may end up on different pages entirely but they are here for now.
@@ -171,7 +177,7 @@ As a final warning, you if you break the kernel, you are on the hook for your sy
 
 System Upgrades are generally unsupported. There are quite a few methods out there of users performing upgrades:
 
-* Updating the system release packages (eg centos-release to rocky-release, or updating rocky-release to another) and running a `yum distro-sync` or `yum update`
+* Updating the system release packages (e.g., centos-release to rocky-release, or updating rocky-release to another) and running a `yum distro-sync` or `yum update`
 
   * Example 1: replacing centos-\* packages with rocky-\* packages and running `yum update` or `yum distro-sync`
   * Example 2: updating rocky-\* packages from 8 to 9, and then running `dnf update` or `dnf distro-sync`

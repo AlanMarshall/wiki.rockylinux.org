@@ -6,7 +6,7 @@ This section goes over how to manage content in git and the community build syst
 
 ## Importing to the RESF Git Service
 
-All Special Interset Groups get an organization created in the RESF Git Service. Each organization will have a `meta` repository that can track issues or requests for the SIG as a whole. This is not a requirement and each SIG can dictate how issues or requests are handled.
+All Special Interest Groups get an organization created in the RESF Git Service. Each organization will have a `meta` repository that can track issues or requests for the SIG as a whole. This is not a requirement and each SIG can dictate how issues or requests are handled.
 
 There is no strict requirement on what repositories should and should not exist. It is up to the discretion of the SIG.
 
@@ -21,7 +21,7 @@ Special Interest Groups that build and release packages will have a subgroup und
 
 This area is specifically used for rpm sources (spec file, patches, light text files). The expected format is:
 
-* `SOURCES/...` -- light text files, scripts, patches, etc can come here (eg ones not in a tar ball)
+* `SOURCES/...` -- light text files, scripts, patches, etc can come here (e.g., ones not in a tar ball)
 * `SPECS/name.spec` -- Your spec file comes here - note it should only be one spec file
 * `.name.metadata` -- Required, lists your source archives or otherwise that will be in lookaside. Empty if there are no sources to pull from lookaside.
 
@@ -41,7 +41,7 @@ b7b91082908db35e4acbcd0221b8df4044913dc1 SOURCES/freeipa-4.9.6.tar.gz
 
 This area is specifically used for modularity. If you plan on maintaining multiple versions of a package and want to use modularity, this is the place to do it. The branch names *should always match* with rpms, especially when there are multiple versions. See the `branch` section in this document for more information.
 
-The name of the module does not necessarily have to match the actual package or package names. For example, the idm module. There is no package named `idm`, but each package as part of the module have the correct branch names as referenced in the source yaml for the module.
+The name of the module does not necessarily have to match the actual package or package names. For example, the idm module. There is no package named `idm`, but each package as part of the module has the correct branch names as referenced in the source yaml for the module.
 
 The format expected:
 
@@ -56,13 +56,40 @@ This area is specifically used for having the source of the rpm. This means that
 
 ### Branch Names
 
-This is **important**. **main is NOT an acceptable branch name under any cirumstances.**
+Branch naming is **important**. **main is NOT an acceptable branch name under any cirumstances.**
 
-You **must** use `rX`, `X` being the major version number. At this time, there is no support for multiple versions of a package.
+You **must** use `rX` as the prefix, `X` being the major version number. All packages that are part of a SIG and will be in a peridot project together must have matching branch names.
+
+To support multiple versions, there will need to be multiple projects and branches need to be named appropriately. Multiple versions of a package cannot coexist in a single peridot project.
+
+#### Multiple Versions + Multiple Projects
+
+There may be cases where:
+
+* Multiple version of a package will exist in some form and/or
+* Although the cases may be rare, sets of packages may not coexist with others and live in completely separate projects.
+
+If this applies to your SIG, you can use branch names and the proper configuration in peridot to make this separation possible. The names of the branches are used to separate packages if need be. See the ideal template:
+
+`rX-sig-SIGNAME[-PKGNAME]-VERSION`
+
+* `rX-sig` is considered the SIG prefix
+* `SIGNAME` would be the name of the SIG (for example, `kernel`)
+* `PKGNAME` is optional
+* `VERSION` is required
+
+Examples:
+
+```
+* Kernel SIG for kernel 5.15 (Rocky Linux 8): r8-sig-kernel-5.15
+* Kernel SIG for kernel 5.15 (Rocky Linux 9): r9-sig-kernel-5.15
+* Kernel SIG for kernel 6.1 on (Rocky Linux 8): r8-sig-kernel-6.1
+* Kernel SIG for kernel 6.1 on (Rocky Linux 9): r9-sig-kernel-6.1
+```
 
 ### Tagging
 
-In the case of an rpm or a module, there should be tags associated, otherwise the build system will *not* pick up your builds. The general format for a tags are as follows:
+In the case of an rpm or a module, there should be tags associated, otherwise the build system will *not* pick up your builds. The general format for tags are as follows:
 
 * RPM: `imports/rX/NEVR` (for example, `imports/r8/bash-4.4.20-2.el8` is acceptable)
   * Note: You cannot choose a tag/branch destined for one rocky release and build on another. Ensure your tags and branches are in alignment.
