@@ -8,6 +8,8 @@ This section goes over how to manage content in git and the community build syst
 
 All Special Interest Groups get an organization created in the RESF Git Service. Each organization will have a `meta` repository that can track issues or requests for the SIG as a whole. This is not a requirement and each SIG can dictate how issues or requests are handled.
 
+All Special Interest Groups also get a `wiki` repository in which they can manage their documentation and content for their `sig-X.rocky.page` website.
+
 There is no strict requirement on what repositories should and should not exist. It is up to the discretion of the SIG.
 
 ## Importing to the Rocky Linux GitLab
@@ -17,9 +19,23 @@ Special Interest Groups that build and release packages will have a subgroup und
 !!! info "Additional Subgroups"
     While this is the default layout, additional subgroups can be made at the root of the SIG group. It is expected that some SIG's may not have plans to build packages as they could have an entirely separate focus.
 
-### rpms
+!!! info "Examples and Inspiration"
+    If you are ever confused on designing your imports and packages, you may look into other sig's or even Rocky Linux itself in the `staging` group.
 
-This area is specifically used for rpm sources (spec file, patches, light text files). The expected format is:
+### src
+
+This area is typically for the rpm sources (spec file, metadata file, and so on), with support for dist-git/src-git coming soon. While this area is optional, it is highly likely you will be using it for managing rpm sources, and uploading the tarball sources to the lookaside.
+
+For the case of rpm sources, which is the most standard usage, imports start here. When an import occurs, these would appear in `rpms` as long as the peridot catalog configuration is made aware. **Note** that all rules from the `rpms` section below apply.
+
+!!! info "rpm rules"
+    To repeat: All rules from the `rpms` section below apply. Please ensure that you read carefully.
+
+#### RPM Format Rules
+
+The expectation is that you will be designing repositories to be imported here in majority of cases. As this is likely, this is the expected format:
+
+The expected format is:
 
 * `SOURCES/...` -- light text files, scripts, patches, etc can come here (e.g., ones not in a tar ball)
 * `SPECS/name.spec` -- Your spec file comes here - note it should only be one spec file
@@ -37,6 +53,12 @@ The left column is generally a hashed sum of the archive. This *is* the name of 
 b7b91082908db35e4acbcd0221b8df4044913dc1 SOURCES/freeipa-4.9.6.tar.gz
 ```
 
+Ensure that you are also using the correct branch names. See the `Branch Names` section later in this guide for further details.
+
+### rpms
+
+This area is specifically used for rpm sources (spec file, patches, light text files, and so on). This is where "imports" will occur and no manual intervention or manual commits are necessary. Any manual changes made will never be picked up by the build system.
+
 ### modules
 
 This area is specifically used for modularity. If you plan on maintaining multiple versions of a package and want to use modularity, this is the place to do it. The branch names *should always match* with rpms, especially when there are multiple versions. See the `branch` section in this document for more information.
@@ -49,10 +71,6 @@ The format expected:
 * `.name.metadata` - Just like rpms, a metadata file is required, even though it will be empty.
 
 As of this writing, the `name.yaml` file generated in the root may be done by the Rocky Automation account.
-
-### src
-
-This area is specifically used for having the source of the rpm. This means that instead of uploading directly to S3, sources can be managed within a repository that matches the name of an rpm in the `rpms` group, by using dist-git/src-git. This is an optional group and does not have to be used. These are subject to the correct branch names.
 
 ### Branch Names
 
@@ -76,7 +94,7 @@ If this applies to your SIG, you can use branch names and the proper configurati
 * `rX-sig` is considered the SIG prefix
 * `SIGNAME` would be the name of the SIG (for example, `kernel`)
 * `PKGNAME` is optional
-* `VERSION` is required
+* `VERSION` is required. This can be numerical or simply another name/acronym.
 
 Examples:
 
@@ -89,7 +107,7 @@ Examples:
 
 ### Tagging
 
-In the case of an rpm or a module, there should be tags associated, otherwise the build system will *not* pick up your builds. The general format for tags are as follows:
+In the case of an rpm or a module, there should be tags associated, otherwise the build system *may not* pick up your builds. The general format for tags are as follows:
 
 * RPM: `imports/rX/NEVR` (for example, `imports/r8/bash-4.4.20-2.el8` is acceptable)
   * Note: You cannot choose a tag/branch destined for one rocky release and build on another. Ensure your tags and branches are in alignment.
@@ -158,6 +176,6 @@ package {
 
 ## Importing to S3
 
-TBD
+TBD. Please work with a member of Release Engineering or SIG/Core for assistance for now.
 
 {% include "releng/resources_bottom.md" %}

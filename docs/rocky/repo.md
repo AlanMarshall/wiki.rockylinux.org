@@ -37,7 +37,7 @@ Each major release has a set of repositories that come default with the distribu
 
 ### Notes on: CRB
 
-CRB is "Code Ready Builder" - PowerTools was a carryover from CentOS, which is still the equivalent of CRB in RHEL. `crb` will be the repository name going forward in Rocky Linux and other derivatives.
+CRB is "Code Ready Builder" - PowerTools was a carryover from CentOS, which is still the equivalent of CRB in RHEL. `crb` will be the repository name going forward in Rocky Linux and other derivatives starting with version 9. Rocky Linux 8 matches CentOS's use of PowerTools in order to be as compatible as possible with what users expect from a rebuild of version 8.
 
 ### Notes on: Lack of "updates" repo
 
@@ -55,7 +55,6 @@ There are extra repositories offered by Rocky Linux.
 | NFV              | nfv              | Yes     | Yes     | No      |
 | SAP / SAP HANA   | sap / saphana    | No      | Yes     | No      |
 | Devel / devel    | devel            | Yes     | Yes     | No      |
-| rockyrpi         | altarch-rockyrpi | Yes\*   | Yes\*   | No      |
 
 ### Notes on: Extras
 
@@ -75,13 +74,15 @@ Packages that fall under A and B will have a `.plus` added to their version tag.
 
 ### Notes on: Devel
 
-The devel (development) repository are packages that are not normally provided in the base nor extra repositories for the purposes of providing dependencies or devel packages that may not be provided by upstream. In some releases, this repository may contain *all* packages that are provided for Rocky Linux.
+The devel (development) repository are packages that are not normally provided in the base nor extra repositories for the purposes of providing dependencies or devel packages that may not be provided by upstream. As such, it is treated as a "buildroot" repository, as this repository may contain *all* packages that are provided for Rocky Linux. Additionally, the i686 architecture is provided for the cases of building multilib, as it is not a primary architecture released.
 
-This repository should only be enabled for package building/development purposes and shouldn't be permanently enabled.
+This repository should only be enabled for package building/development purposes and **should not** be permanently enabled.
 
-### Notes on: rockyrpi
+### Notes on: SIG repositories
 
-The rockyrpi repository is being/has been moved to a SIG repository. It'll no longer be found in the base Rocky Linux repository directories in the future. All SIG repositories can be found [here](https://dl.rockylinux.org/pub/sig)
+Some Special Interest Groups provide additional repositories that enhance the Enterprise Linux experience. These repositories are installable via `rocky-release-*` and `centos-release-*` packages found in the `extras` repository.
+
+All SIG repositories can be found [here](https://dl.rockylinux.org/pub/sig)
 
 ## Vault
 
@@ -100,7 +101,7 @@ As with Enterprise Linux and Fedora, there are additional community approved rep
 | **RPM Fusion** - [RPM Fusion](https://rpmfusion.org/) provides software that the Fedora Project or Red Hat does not want to ship in Enterprise Linux and Fedora. These repositories do rely on EPEL. The policy is to **not** replace EPEL nor base packages. The free repository can be installed by running `dnf install rpmfusion-free-release`. |
 | **Remi Repository** - [Remi](http://rpms.remirepo.net/) maintains a large collection of RPMs, including latest versions of PHP, among other things. His FAQ can be found [here](http://blog.remirepo.net/pages/English-FAQ). This is a collection of repositories. Using the `-safe` series of repositories will ensure that nothing from the base will be replaced or overwritten. However, be aware that these repositories do **not** play well with other third party repositories. You will need to use caution as you enable more repositories on your system. |
 | **GhettoForge** - [GhettoForge](http://ghettoforge.org/) provides packages not in other third party repositories. Packages that overwrite the base would be in the `gf-plus` repository. Please see [usage](http://ghettoforge.org/index.php/Usage) for more information. |
-| **Trinity Desktop Environment (TDE)** - [TDE](http://www.trinitydesktop.org/about.php) provides Enterprise Linux packages for a KDE 3.5 style desktop environment. As of this writing, EL8 repositories exist. You can find TDE support resources [here](https://www.trinitydesktop.org/support.php). |
+| **Trinity Desktop Environment (TDE)** - [TDE](http://www.trinitydesktop.org/about.php) provides Enterprise Linux packages for a KDE 3.5 style desktop environment. As of this writing, EL8 and EL9 repositories exist. You can find TDE support resources [here](https://www.trinitydesktop.org/support.php). |
 | **ZFS On Linux** - The [ZFS on Linux](http://www.zfsonlinux.org/) project is an implementation of OpenZFS, designed to work in a Linux environment. While this filesystem is very popular, it receives no testing or support from Rocky Release Engineering or Testing. Use at your own risk. |
 | **Upstream centos-release-*** - In the extras repository, there are `centos-release-*` packages that provide additional repositories from the Special Interest Groups of CentOS. As they are available in extras and should work on Rocky Linux, they are considered approved and community supported. |
 
@@ -124,4 +125,4 @@ We recommend checking out the [EPEL Quickstart Guide](https://docs.fedoraproject
 
 ### Notes on: Unlisted Repositories
 
-If there is a repository that you use (or maintain) and you do not see it here, it is likely that we may not know of it. Unfortunately, this happens. If there are popular repositories that are used in the Enterprise Linux community that should be added to the list, you may drop us a line in Mattermost or IRC.
+If there is a repository that you use (or maintain) and you do not see it here, it is likely that we may not know of it. Unfortunately, this happens. If there are popular repositories that are used in the Enterprise Linux community that should be added to the list, you may drop us a line in Mattermost, IRC, or an issue to the wiki git repository.

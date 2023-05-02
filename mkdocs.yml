@@ -1,6 +1,6 @@
 ---
 # Project information
-site_name: Rocky Wiki
+site_name: Rocky Linux Wiki
 site_url: https://wiki.rockylinux.org
 site_description: >-
   The wiki for the Rocky Linux project
@@ -8,14 +8,15 @@ site_description: >-
 # Repository
 repo_url: https://github.com/rocky-linux/wiki.rockylinux.org
 repo_name: rocky-linux/wiki.rockylinux.org
-edit_uri: edit/main/docs/
+edit_uri: edit/development/docs/
 
 # Copyright
-copyright: Copyright &copy; 2022 Rocky Enterprise Software Foundation
+copyright: Copyright &copy; 2023 Rocky Enterprise Software Foundation
 
 # Configuration
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -47,6 +48,7 @@ theme:
     - search.highlight
     - search.suggest
     - toc.integrate
+    - content.action.edit
   logo: assets/icon-white.svg
 
 # Plugins
